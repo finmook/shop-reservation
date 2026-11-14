@@ -30,7 +30,7 @@ Three collections in the `shop` database:
   products: [{ productId: "usagi", name: "Nurse Usagi", order: 1, clickedAt: ISODate("...") }] }
 
 // products
-{ _id: "usagi", name: "Nurse Usagi", price: 1980, total: 1, stock: 1, reservedCount: 0 }
+{ _id: "usagi", name: "Nurse Usagi", price: 580, total: 1, stock: 1, reservedCount: 0 }
 
 // clicks: log of wins and ties for the dashboard
 { productId: "usagi", status: "tie", users: ["alice", "bob"], at: ISODate("...") }
@@ -63,7 +63,7 @@ npm run dev             # API on :3001, site on :5173
 
 `npm run dev -- --host` exposes it on your local network so you can open it on your phone.
 
-To edit products, change `server/products.js` and run `npm run seed` again. `npm run seed -- --reset` clears all reservations and refills stock.
+To edit products, change `server/products.js` and run `npm run seed` again. Changing `total` keeps existing reservations and recalculates stock. Products removed from the list are deleted. `npm run seed -- --reset` clears all reservations and refills stock.
 
 ## Testing simultaneous clicks
 
@@ -79,7 +79,20 @@ npm run seed -- --reset           # clean up afterwards
 
 ## Deploying
 
-I use Render. Build command `npm install && npm run build`, start command `npm start`. Set `MONGODB_URI`, `DB_NAME`, `SESSION_SECRET` and `TRUST_PROXY=1` in the environment (plus the Turnstile keys if you use it). Only run one instance, since the click window is in memory.
+The API runs on Render and the site runs on Cloudflare Pages.
+
+Render's free tier sleeps after 15 minutes without traffic and shows its own loading page while it starts. Putting the site on Pages means visitors always get our page first. It shows a "ร้านกำลังเปิด" screen and polls `/api/health` until the server is up, then loads the shop.
+
+Render (API):
+- build `npm install && npm run build`, start `npm start`
+- env: `MONGODB_URI`, `DB_NAME`, `SESSION_SECRET`, `TRUST_PROXY=1`, `ALLOWED_ORIGINS=https://<site>.pages.dev`, `TURNSTILE_SECRET`
+- only one instance, since the click window is in memory
+
+Cloudflare Pages (site):
+- build `npm run build`, output `dist`
+- env: `VITE_API_URL=https://<api>.onrender.com`, `VITE_TURNSTILE_SITE_KEY`, `NODE_VERSION=22`
+
+A free cron job (cron-job.org) hits `/api/health` every 10 minutes so the server mostly stays awake. One always-on service fits in Render's 750 free hours a month.
 
 ## Note
 

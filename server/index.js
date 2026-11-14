@@ -12,6 +12,27 @@ if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PRO
 app.disable('x-powered-by')
 app.use(express.json({ limit: '4kb' }))
 
+// The site can be hosted separately (Cloudflare Pages). List its URL(s) in ALLOWED_ORIGINS,
+// e.g. ALLOWED_ORIGINS=https://shop-reservation.pages.dev
+const ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim().replace(/\/$/, '')).filter(Boolean)
+app.use('/api', (req, res, next) => {
+  const origin = req.get('origin')
+  if (origin && ORIGINS.includes(origin)) {
+    res.set({
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Session',
+      'Access-Control-Max-Age': '600',
+      Vary: 'Origin',
+    })
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204)
+  next()
+})
+
+// cheap check used by the "waking up" page and the keep-alive ping (no DB call)
+app.get('/api/health', (_req, res) => res.json({ ok: true }))
+
 const USERNAME_RE = /^[A-Za-z0-9_]{1,15}$/
 const cleanName = (s) => String(s ?? '').trim().replace(/^@+/, '')
 

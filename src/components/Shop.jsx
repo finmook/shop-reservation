@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { reserve, yen } from '../api.js'
+import { reserve, baht } from '../api.js'
 import ResultModal from './ResultModal.jsx'
 
 const COOLDOWN_MS = 1500 // after each click, wait before the next one
@@ -72,8 +72,8 @@ export default function Shop({ name, token, onRelogin, products, myIds, loading 
                 <div className="product-body">
                   <h3>{p.name}</h3>
                   <div className="series" title={p.fullName}>{p.series}</div>
-                  <div className="price">{yen(p.price)} <span className="tax">รวมภาษี</span></div>
-                  <div className="note">📦 ส่งกลาง ธ.ค. 2026 · ยกเลิกไม่ได้</div>
+                  <div className="price">{baht(p.price)}</div>
+                  <div className="note">✈️ ส่งจากญี่ปุ่น กลาง ธ.ค. 2026 · ยกเลิกไม่ได้</div>
                   {mine ? (
                     <div className="owner">💝 จองแล้ว</div>
                   ) : (

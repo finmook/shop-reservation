@@ -301,3 +301,8 @@ code { background: var(--pink-soft); padding: 1px 6px; border-radius: 8px; }
 /* ---------- anti-bot ---------- */
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .captcha { display: flex; justify-content: center; margin-bottom: 16px; min-height: 65px; }
+
+/* waking-up page */
+.wake p { line-height: 1.8; margin: 12px 0 18px; }
+.wake-bar { height: 14px; background: var(--pink-soft); border-radius: 999px; overflow: hidden; margin-bottom: 8px; }
+.wake-bar span { display: block; height: 100%; background: var(--pink); border-radius: 999px; transition: width 1s linear; }
