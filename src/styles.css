@@ -316,3 +316,87 @@ code { background: var(--pink-soft); padding: 1px 6px; border-radius: 8px; }
 
 .btn-dm { display: block; text-decoration: none; background: #fff; color: var(--pink-dark); border: 2px solid var(--pink); margin-bottom: 10px; box-sizing: border-box; }
 .notice a, .my-items a, .rules a { color: inherit; font-weight: 700; }
+
+/* ===================== Christmas theme ===================== */
+.theme-christmas {
+  --bg: #fdf7ef;
+  --bg-dot: #f3e3d3;
+  --ink: #4a3b3b;
+  --muted: #9a8a85;
+  --pink: #e0525e;        /* christmas red */
+  --pink-dark: #b8343f;
+  --pink-soft: #fde4e4;
+  --mint: #d3efdf;        /* pine green */
+  --mint-ink: #1f7a4d;
+  --yellow: #fff1c7;      /* gold */
+  --yellow-ink: #8a6400;
+  --shadow: 0 8px 24px rgba(184, 52, 63, 0.14);
+}
+.theme-christmas body {
+  background-image:
+    radial-gradient(#ffffff 2px, transparent 2.5px),
+    radial-gradient(var(--bg-dot) 1.5px, transparent 2px);
+  background-size: 38px 38px, 26px 26px;
+  background-position: 0 0, 13px 13px;
+}
+
+/* string of lights across the top */
+.theme-christmas body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 14px;
+  z-index: 40;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12px 9px, #e0525e 4px, transparent 5px) 0 0 / 96px 14px,
+    radial-gradient(circle at 36px 9px, #f3c13a 4px, transparent 5px) 0 0 / 96px 14px,
+    radial-gradient(circle at 60px 9px, #2f9e62 4px, transparent 5px) 0 0 / 96px 14px,
+    radial-gradient(circle at 84px 9px, #4b8fe0 4px, transparent 5px) 0 0 / 96px 14px,
+    linear-gradient(#5b4a3a, #5b4a3a) 0 4px / 100% 1.5px no-repeat;
+  animation: twinkle 2.4s ease-in-out infinite;
+}
+@keyframes twinkle { 50% { filter: brightness(1.35) saturate(1.2); } }
+
+.theme-christmas .app { padding-top: 26px; }
+.theme-christmas .center-page { padding-top: 30px; }
+
+/* candy-cane stripe on the main button */
+.theme-christmas .btn-primary {
+  background:
+    repeating-linear-gradient(-45deg, rgba(255,255,255,.18) 0 10px, transparent 10px 20px),
+    var(--pink);
+}
+.theme-christmas .btn-primary:disabled { background: #d9a3a8; }
+
+/* tabs and chips get a green accent */
+.theme-christmas .tab.active { background: var(--mint-ink); }
+.theme-christmas .chip { border-color: var(--mint-ink); color: var(--mint-ink); }
+.theme-christmas .chip.active { background: var(--mint-ink); color: #fff; }
+
+/* cards: soft red/green edge like wrapping ribbon */
+.theme-christmas .card,
+.theme-christmas .product { border-color: #fff; box-shadow: 0 0 0 2px #f6d6d6, var(--shadow); }
+.theme-christmas .product.mine { box-shadow: 0 0 0 3px var(--mint-ink), var(--shadow); }
+.theme-christmas .stock-pill { background: var(--mint-ink); }
+.theme-christmas .stock-pill.zero { background: #c9bcc1; }
+
+/* snow */
+.snow { position: fixed; inset: 0; pointer-events: none; z-index: 30; overflow: hidden; }
+.snow span {
+  position: absolute;
+  top: -24px;
+  color: #fff;
+  text-shadow: 0 0 3px rgba(120, 140, 170, 0.6);
+  opacity: 0.9;
+  animation-name: snowfall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes snowfall {
+  to { transform: translate(var(--drift), 105vh) rotate(180deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .snow { display: none; }
+  .theme-christmas body::before { animation: none; }
+}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { login } from '../api.js'
+import { DECOR } from '../shop.js'
 
 const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY
 
@@ -112,9 +113,9 @@ export default function Login({ onLogin }) {
         ) : (
           // step 1: everyone
           <>
-            <div className="big-emoji bounce">🧸</div>
+            <div className="big-emoji bounce">{DECOR.hero}</div>
             <h1>ร้านรับหิ้วตุ๊กตา</h1>
-            <p className="muted">ใครกดก่อน ได้ก่อน~ ✨</p>
+            <p className="muted">ใครกดก่อน ได้ก่อน~ ✨{DECOR.tagline && <><br />{DECOR.tagline}</>}</p>
 
             <label htmlFor="tw" className="label">
               กรอกชื่อ Twitter ของคุณ

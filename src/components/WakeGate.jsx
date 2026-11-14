@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ping } from '../api.js'
+import { DECOR } from '../shop.js'
 
 const POLL_MS = 3000
 const GIVE_UP_MS = 3 * 60_000
@@ -35,7 +36,7 @@ export default function WakeGate({ children }) {
   }, [status])
 
   if (status === 'ready') return children
-  if (status === 'checking') return <div className="center-page"><div className="big-emoji bounce">🧸</div></div>
+  if (status === 'checking') return <div className="center-page"><div className="big-emoji bounce">{DECOR.hero}</div></div>
 
   const secs = Math.floor((Date.now() - startedAt) / 1000)
   const pct = Math.min(95, Math.round((secs / 60) * 100))
@@ -43,7 +44,7 @@ export default function WakeGate({ children }) {
   return (
     <div className="center-page">
       <div className="card login-card wake">
-        <div className="big-emoji bounce">{status === 'failed' ? '😵' : '🧸'}</div>
+        <div className="big-emoji bounce">{status === 'failed' ? '😵' : DECOR.hero}</div>
         <h1>ร้านรับหิ้วตุ๊กตา</h1>
         {status === 'failed' ? (
           <>

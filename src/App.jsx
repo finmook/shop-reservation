@@ -4,6 +4,7 @@ import Login from './components/Login.jsx'
 import Shop from './components/Shop.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import RulesModal from './components/RulesModal.jsx'
+import { DECOR } from './shop.js'
 
 export default function App() {
   const [session, setSession] = useState(loadSession)
@@ -31,10 +32,10 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <span className="brand-emoji">🧸</span>
+          <span className="brand-emoji">{DECOR.brand}</span>
           <div>
             <div className="brand-title">ร้านรับหิ้วตุ๊กตา</div>
-            <div className="brand-sub">ใครกดก่อน ได้ก่อน~</div>
+            <div className="brand-sub">ใครกดก่อน ได้ก่อน~ {DECOR.tagline}</div>
           </div>
         </div>
         <div className="user-pill">
