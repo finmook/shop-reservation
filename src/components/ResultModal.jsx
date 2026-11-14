@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { SHOP_TWITTER, SHOP_TWITTER_URL } from '../shop.js'
 
 export default function ResultModal({ result, me, onClose }) {
   useEffect(() => {
@@ -13,7 +14,14 @@ export default function ResultModal({ result, me, onClose }) {
   if (status === 'won') {
     emoji = '🎉'; tone = 'good'
     title = 'จองสำเร็จ!'
-    body = <>คุณได้ <b>{product.name}</b> เป็น<b>คนที่ {result.order}</b>~<br />ทางร้านจะทักไปที่ Twitter <b>@{me}</b> นะคะ 💌<br /><span className="muted small">จองแล้วยกเลิกไม่ได้นะ</span></>
+    body = (
+      <>
+        คุณได้ <b>{product.name}</b> เป็น<b>คนที่ {result.order}</b>~
+        <br /><b>ทัก DM หาร้านได้เลย</b> ที่ <b>@{SHOP_TWITTER}</b> 💌
+        <br />บอกว่าจองชิ้นไหน และใช้ชื่อ <b>@{me}</b>
+        <br /><span className="muted small">จองแล้วยกเลิกไม่ได้นะ</span>
+      </>
+    )
   } else if (status === 'tie') {
     const others = (result.tiedWith || []).filter((n) => n.toLowerCase() !== me.toLowerCase())
     emoji = '⚡'; tone = 'warn'
@@ -48,6 +56,11 @@ export default function ResultModal({ result, me, onClose }) {
         <div className="big-emoji pop">{emoji}</div>
         <h2>{title}</h2>
         <p>{body}</p>
+        {status === 'won' && (
+          <a className="btn btn-dm btn-lg" href={SHOP_TWITTER_URL} target="_blank" rel="noreferrer">
+            💌 ทัก DM ร้าน @{SHOP_TWITTER}
+          </a>
+        )}
         <button className="btn btn-primary btn-lg" onClick={onClose} autoFocus>
           {status === 'tie' ? 'โอเค ไปกดใหม่!' : 'ตกลง'}
         </button>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { reserve, baht } from '../api.js'
 import ResultModal from './ResultModal.jsx'
+import { SHOP_TWITTER, SHOP_TWITTER_URL } from '../shop.js'
 
 const COOLDOWN_MS = 1500 // after each click, wait before the next one
 
@@ -44,12 +45,13 @@ export default function Shop({ name, token, onRelogin, products, myIds, mine, lo
   return (
     <>
       <div className="notice">
-        ⚠️ <b>จองแล้วยกเลิกไม่ได้</b> · ส่งจากญี่ปุ่น กลาง ธ.ค. 2026 · ร้านจะทักไปทาง Twitter
+        ⚠️ <b>จองแล้วยกเลิกไม่ได้</b> · ส่งจากญี่ปุ่น กลาง ธ.ค. 2026 · จองได้แล้ว<b>ทัก DM ร้านเอง</b>ที่ <a href={SHOP_TWITTER_URL} target="_blank" rel="noreferrer">@{SHOP_TWITTER}</a>
       </div>
 
       {mine.length > 0 && (
         <div className="my-items">
           💝 ของที่คุณจองได้: {mine.map((p) => `${p.name} (คนที่ ${p.order})`).join(', ')}
+          <br />อย่าลืมทัก DM ร้านที่ <a href={SHOP_TWITTER_URL} target="_blank" rel="noreferrer">@{SHOP_TWITTER}</a> นะ
         </div>
       )}
 

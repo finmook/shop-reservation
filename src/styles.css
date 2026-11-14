@@ -313,3 +313,6 @@ code { background: var(--pink-soft); padding: 1px 6px; border-radius: 8px; }
 .my-items { background: var(--mint); color: var(--mint-ink); border-radius: 20px; padding: 10px 16px; margin-bottom: 14px; font-size: 14px; font-weight: 600; }
 .input-wrap.pass { margin-top: 10px; }
 .back-btn { margin-top: 12px; }
+
+.btn-dm { display: block; text-decoration: none; background: #fff; color: var(--pink-dark); border: 2px solid var(--pink); margin-bottom: 10px; box-sizing: border-box; }
+.notice a, .my-items a, .rules a { color: inherit; font-weight: 700; }

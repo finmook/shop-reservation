@@ -1,3 +1,5 @@
+import { SHOP_TWITTER, SHOP_TWITTER_URL } from '../shop.js'
+
 // Shown once after login. The customer has to accept before they can reserve.
 export default function RulesModal({ onAccept }) {
   return (
@@ -8,7 +10,7 @@ export default function RulesModal({ onAccept }) {
         <ul>
           <li><b>จองแล้วยกเลิกไม่ได้</b> กดจองเมื่อแน่ใจแล้วเท่านั้น</li>
           <li>สินค้าส่งจากญี่ปุ่น ประมาณ <b>กลางเดือน ธ.ค. 2026</b></li>
-          <li>ทางร้านจะติดต่อกลับทาง <b>Twitter</b> ตามชื่อที่กรอก</li>
+          <li>จองสำเร็จแล้ว <b>ต้องทัก DM หาร้านเอง</b> ที่ <a href={SHOP_TWITTER_URL} target="_blank" rel="noreferrer">@{SHOP_TWITTER}</a> ด้วยชื่อ Twitter ที่ใช้จอง</li>
           <li>ถ้ามีคนกดพร้อมกันแล้วของไม่พอ รอบนั้นเป็นโมฆะ <b>ต้องกดใหม่</b></li>
           <li>จองได้คนละ 1 ชิ้นต่อแบบ</li>
         </ul>
