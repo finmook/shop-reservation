@@ -48,6 +48,12 @@ Since the free tiers have request limits, I added a few things in `server/guard.
 - A hidden honeypot field on the login form.
 - `/api/state` is cached, so lots of people watching the dashboard doesn't mean lots of DB reads.
 
+## Admin dashboard
+
+The dashboard (who got what, in what order, and the tie log) is only for the shop owner. Names listed in `ADMIN_USERNAMES` have to enter `ADMIN_PASSWORD` when logging in, since anyone could type any name otherwise. The admin flag is stored in the signed token, and the server only returns customer data from `/api/admin` to admin tokens. Customers get product stock from `/api/state` and their own reservations from `/api/me`.
+
+Before entering the shop, customers have to accept the rules (reservations can't be cancelled, ships from Japan in mid-December).
+
 ## Why not Next.js
 
 The 500 ms window keeps pending clicks in memory and SSE needs long-lived connections. On serverless (e.g. Vercel), requests can land on different instances and wouldn't see each other's clicks. So this runs as a single Node process that serves both the API and the built React app.
@@ -85,7 +91,7 @@ Render's free tier sleeps after 15 minutes without traffic and shows its own loa
 
 Render (API):
 - build `npm install && npm run build`, start `npm start`
-- env: `MONGODB_URI`, `DB_NAME`, `SESSION_SECRET`, `TRUST_PROXY=1`, `ALLOWED_ORIGINS=https://<site>.pages.dev`, `TURNSTILE_SECRET`
+- env: `MONGODB_URI`, `DB_NAME`, `SESSION_SECRET`, `TRUST_PROXY=1`, `ALLOWED_ORIGINS=https://<site>.pages.dev`, `TURNSTILE_SECRET`, `ADMIN_USERNAMES`, `ADMIN_PASSWORD`
 - only one instance, since the click window is in memory
 
 Cloudflare Pages (site):

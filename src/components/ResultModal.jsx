@@ -13,7 +13,7 @@ export default function ResultModal({ result, me, onClose }) {
   if (status === 'won') {
     emoji = '🎉'; tone = 'good'
     title = 'จองสำเร็จ!'
-    body = <>คุณได้ <b>{product.name}</b> เป็น<b>คนที่ {result.order}</b>~<br />ทางร้านจะทักไปที่ Twitter <b>@{me}</b> นะคะ 💌</>
+    body = <>คุณได้ <b>{product.name}</b> เป็น<b>คนที่ {result.order}</b>~<br />ทางร้านจะทักไปที่ Twitter <b>@{me}</b> นะคะ 💌<br /><span className="muted small">จองแล้วยกเลิกไม่ได้นะ</span></>
   } else if (status === 'tie') {
     const others = (result.tiedWith || []).filter((n) => n.toLowerCase() !== me.toLowerCase())
     emoji = '⚡'; tone = 'warn'

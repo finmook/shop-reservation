@@ -4,7 +4,7 @@ import ResultModal from './ResultModal.jsx'
 
 const COOLDOWN_MS = 1500 // after each click, wait before the next one
 
-export default function Shop({ name, token, onRelogin, products, myIds, loading }) {
+export default function Shop({ name, token, onRelogin, products, myIds, mine, loading }) {
   const categories = useMemo(
     () => [...new Set(['Chiikawa', ...products.map((p) => p.category)])],
     [products]
@@ -43,6 +43,16 @@ export default function Shop({ name, token, onRelogin, products, myIds, loading 
 
   return (
     <>
+      <div className="notice">
+        ⚠️ <b>จองแล้วยกเลิกไม่ได้</b> · ส่งจากญี่ปุ่น กลาง ธ.ค. 2026 · ร้านจะทักไปทาง Twitter
+      </div>
+
+      {mine.length > 0 && (
+        <div className="my-items">
+          💝 ของที่คุณจองได้: {mine.map((p) => `${p.name} (คนที่ ${p.order})`).join(', ')}
+        </div>
+      )}
+
       <div className="chips">
         {categories.map((c) => (
           <button key={c} className={`chip ${c === cat ? 'active' : ''}`} onClick={() => setCat(c)}>

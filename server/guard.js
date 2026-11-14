@@ -64,24 +64,39 @@ const TOKEN_TTL_MS = 12 * 60 * 60_000
 
 const sign = (s) => crypto.createHmac('sha256', SECRET).update(s).digest('base64url')
 
-export function issueToken(username) {
-  const payload = Buffer.from(JSON.stringify({ u: username, t: Date.now() })).toString('base64url')
+export function issueToken(username, admin = false) {
+  const payload = Buffer.from(JSON.stringify({ u: username, t: Date.now(), a: admin ? 1 : 0 })).toString('base64url')
   return `${payload}.${sign(payload)}`
 }
 
-/** Returns the username, or null if the token is missing/forged/expired. */
-export function readToken(token) {
+/** Returns { username, admin }, or null if the token is missing/forged/expired. */
+export function readSession(token) {
   if (typeof token !== 'string') return null
   const [payload, sig] = token.split('.')
   if (!payload || !sig) return null
   const expected = sign(payload)
   if (sig.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null
   try {
-    const { u, t } = JSON.parse(Buffer.from(payload, 'base64url').toString())
-    return Date.now() - t < TOKEN_TTL_MS ? u : null
+    const { u, t, a } = JSON.parse(Buffer.from(payload, 'base64url').toString())
+    return Date.now() - t < TOKEN_TTL_MS ? { username: u, admin: a === 1 && isAdmin(u) } : null
   } catch {
     return null
   }
+}
+
+// ---------------------------------------------------------------------------
+// Admin: names in ADMIN_USERNAMES must also give ADMIN_PASSWORD to log in
+// ---------------------------------------------------------------------------
+const ADMINS = (process.env.ADMIN_USERNAMES || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
+
+export const isAdmin = (username) => ADMINS.includes(String(username).toLowerCase())
+
+export function checkAdminPassword(password) {
+  const real = process.env.ADMIN_PASSWORD
+  if (!real || typeof password !== 'string') return false
+  const a = crypto.createHash('sha256').update(password).digest()
+  const b = crypto.createHash('sha256').update(real).digest()
+  return crypto.timingSafeEqual(a, b)
 }
 
 // ---------------------------------------------------------------------------

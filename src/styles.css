@@ -306,3 +306,10 @@ code { background: var(--pink-soft); padding: 1px 6px; border-radius: 8px; }
 .wake p { line-height: 1.8; margin: 12px 0 18px; }
 .wake-bar { height: 14px; background: var(--pink-soft); border-radius: 999px; overflow: hidden; margin-bottom: 8px; }
 .wake-bar span { display: block; height: 100%; background: var(--pink); border-radius: 999px; transition: width 1s linear; }
+
+/* rules + notices */
+.rules ul { text-align: left; padding-left: 20px; margin: 12px 0 20px; line-height: 1.8; }
+.notice { background: var(--yellow); color: var(--yellow-ink); border-radius: 20px; padding: 10px 16px; margin-bottom: 14px; font-size: 14px; }
+.my-items { background: var(--mint); color: var(--mint-ink); border-radius: 20px; padding: 10px 16px; margin-bottom: 14px; font-size: 14px; font-weight: 600; }
+.input-wrap.pass { margin-top: 10px; }
+.back-btn { margin-top: 12px; }

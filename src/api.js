@@ -31,7 +31,7 @@ async function post(path, body, token) {
   return data
 }
 
-export const login = (username, captcha, website) => post('/api/login', { username, captcha, website })
+export const login = (username, captcha, website, password) => post('/api/login', { username, captcha, website, password })
 export const reserve = (productId, token) => post('/api/reserve', { productId }, token)
 
 /** true if the server answers within `timeoutMs` */
@@ -48,19 +48,29 @@ export async function ping(timeoutMs = 5000) {
   }
 }
 
-/** Load state and refresh whenever the server says something changed. */
-export function subscribeState(onChange) {
+async function getJson(path, token) {
+  const r = await fetch(API + path, token ? { headers: { 'X-Session': token } } : undefined)
+  if (r.status === 429) return undefined
+  if (r.status === 401) throw Object.assign(new Error('relogin'), { code: 'relogin' })
+  if (!r.ok) throw new Error(`HTTP ${r.status}`)
+  return r.json()
+}
+
+/** Load state (+ my reservations, + admin data) and refresh when the server says something changed. */
+export function subscribeState(session, onChange) {
   let alive = true
   let timer = null
   const load = () => {
     clearTimeout(timer) // collapse bursts of updates into one request
     timer = setTimeout(async () => {
       try {
-        const r = await fetch(`${API}/api/state`)
-        if (r.status === 429) return
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        const data = await r.json()
-        if (alive) onChange({ ...data, error: null })
+        const [state, me, admin] = await Promise.all([
+          getJson('/api/state'),
+          getJson('/api/me', session.token),
+          session.admin ? getJson('/api/admin', session.token) : undefined,
+        ])
+        if (!alive || !state) return
+        onChange({ ...state, ...(me ? { mine: me.products } : {}), ...(admin ?? {}), error: null })
       } catch (e) {
         if (alive) onChange({ error: e })
       }

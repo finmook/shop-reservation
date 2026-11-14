@@ -3,7 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { connect } from './db.js'
 import { createReserver, TIE_WINDOW_MS } from './reserve.js'
-import { limit, issueToken, readToken, verifyCaptcha } from './guard.js'
+import { limit, issueToken, readSession, verifyCaptcha, isAdmin, checkAdminPassword } from './guard.js'
 
 const col = await connect()
 const app = express()
@@ -41,21 +41,36 @@ function tooMany(res, retryAfter) {
   return res.status(429).json({ status: 'ratelimited', retryAfter, error: 'too many requests' })
 }
 
-// ---------- cached state: many viewers -> one Mongo read ----------
-let stateCache = null // Promise
-let stateAt = 0
-function getState() {
-  if (!stateCache || Date.now() - stateAt > 5000) {
-    stateAt = Date.now()
-    stateCache = Promise.all([
-      col.products.find().sort({ sort: 1 }).toArray(),
-      col.users.find({ 'products.0': { $exists: true } }, { projection: { _id: 0, username: 1, products: 1 } }).toArray(),
-      col.clicks.find().sort({ at: -1 }).limit(50).toArray(),
-    ]).then(([products, users, log]) => ({ products, users, log, tieWindowMs: TIE_WINDOW_MS }))
-    stateCache.catch(() => { stateCache = null })
+// ---------- cached reads: many viewers -> one Mongo read ----------
+function cached(load) {
+  let p = null
+  let at = 0
+  const get = () => {
+    if (!p || Date.now() - at > 5000) {
+      at = Date.now()
+      p = load()
+      p.catch(() => { p = null })
+    }
+    return p
   }
-  return stateCache
+  get.clear = () => { p = null }
+  return get
 }
+
+// public: products and stock only
+const getState = cached(async () => ({
+  products: await col.products.find().sort({ sort: 1 }).toArray(),
+  tieWindowMs: TIE_WINDOW_MS,
+}))
+
+// admin only: who reserved what + tie log
+const getAdmin = cached(async () => {
+  const [users, log] = await Promise.all([
+    col.users.find({ 'products.0': { $exists: true } }, { projection: { _id: 0, username: 1, products: 1 } }).toArray(),
+    col.clicks.find().sort({ at: -1 }).limit(50).toArray(),
+  ])
+  return { users, log }
+})
 
 // ---------- live updates (Server-Sent Events) ----------
 const streams = new Set()
@@ -63,7 +78,8 @@ const streamsPerIp = new Map()
 const MAX_STREAMS_PER_IP = 6
 let pending = null
 function broadcast() {
-  stateCache = null
+  getState.clear()
+  getAdmin.clear()
   clearTimeout(pending)
   pending = setTimeout(() => {
     for (const res of streams) res.write('data: update\n\n')
@@ -99,6 +115,14 @@ app.post('/api/login', async (req, res) => {
 
   const username = cleanName(req.body.username)
   if (!USERNAME_RE.test(username)) return res.status(400).json({ error: 'invalid twitter name' })
+
+  // admin names need a password (checked before the captcha so the captcha token isn't used up)
+  const admin = isAdmin(username)
+  if (admin) {
+    if (!req.body.password) return res.status(401).json({ error: 'admin_password' })
+    if (!checkAdminPassword(req.body.password)) return res.status(401).json({ error: 'wrong_password' })
+  }
+
   if (!(await verifyCaptcha(req.body.captcha, req.ip))) return res.status(403).json({ error: 'captcha' })
 
   const user = await col.users.findOneAndUpdate(
@@ -106,7 +130,7 @@ app.post('/api/login', async (req, res) => {
     { $setOnInsert: { username, usernameLower: username.toLowerCase(), products: [], createdAt: new Date() } },
     { upsert: true, returnDocument: 'after' }
   )
-  res.json({ username: user.username, token: issueToken(user.username) })
+  res.json({ username: user.username, admin, token: issueToken(user.username, admin) })
 })
 
 app.get('/api/state', async (req, res) => {
@@ -115,8 +139,24 @@ app.get('/api/state', async (req, res) => {
   res.json(await getState())
 })
 
+// the logged-in customer's own reservations
+app.get('/api/me', async (req, res) => {
+  const s = readSession(req.get('x-session'))
+  if (!s) return res.status(401).json({ error: 'relogin' })
+  const wait = limit('state', req.ip)
+  if (wait) return tooMany(res, wait)
+  const u = await col.users.findOne({ usernameLower: s.username.toLowerCase() }, { projection: { _id: 0, products: 1 } })
+  res.json({ products: u?.products ?? [] })
+})
+
+app.get('/api/admin', async (req, res) => {
+  const s = readSession(req.get('x-session'))
+  if (!s?.admin) return res.status(403).json({ error: 'admin only' })
+  res.json(await getAdmin())
+})
+
 app.post('/api/reserve', async (req, res) => {
-  const username = readToken(req.get('x-session'))
+  const username = readSession(req.get('x-session'))?.username
   if (!username) return res.status(401).json({ status: 'relogin' })
 
   const wait = limit('reserveIp', req.ip) || limit('reserveUser', username.toLowerCase())
