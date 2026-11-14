@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb'
 
 if (!process.env.MONGODB_URI) {
-  console.error('❌ MONGODB_URI is missing — copy .env.example to .env and fill it in.')
+  console.error('MONGODB_URI is missing. Copy .env.example to .env and fill it in.')
   process.exit(1)
 }
 

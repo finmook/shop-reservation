@@ -5,16 +5,16 @@ import { client } from './db.js'
  * ----------------
  * The first click on a product opens a TIE_WINDOW_MS window. Every click that
  * arrives in that window joins the same batch. When the window closes:
- *   • stock is 0                       → everyone: sold out (nothing is saved)
- *   • more people than stock left      → TIE: nobody gets it, everyone retries
- *     (with STRICT_TIE, ANY 2+ people  → TIE, even if there's enough stock)
- *   • otherwise                        → everyone wins, ordered by click time
+ *   - stock is 0                       -> everyone: sold out (nothing is saved)
+ *   - more people than stock left      -> TIE: nobody gets it, everyone retries
+ *     (with STRICT_TIE, ANY 2+ people  -> TIE, even if there's enough stock)
+ *   - otherwise                        -> everyone wins, ordered by click time
  *
  * Batches for the same product are resolved one after another (queue), and the
  * stock decrement is conditional (`stock >= n`) inside a transaction, so stock
  * can never go below 0 and a user's list only ever gets products they won.
  *
- * Needs ONE server process (batches live in memory) — don't run multiple instances.
+ * Needs ONE server process (batches live in memory), don't run multiple instances.
  */
 export const TIE_WINDOW_MS = 500
 export const STRICT_TIE = false
@@ -34,7 +34,7 @@ export function createReserver(col, onChange) {
   async function reserve(productId, username) {
     const lower = username.toLowerCase()
 
-    // fast rejects — never recorded anywhere
+    // fast rejects, never recorded anywhere
     const product = await col.products.findOne({ _id: productId })
     if (!product) return { status: 'error', message: 'ไม่พบสินค้า' }
     if (product.stock <= 0) return { status: 'soldout' }
@@ -92,7 +92,7 @@ export function createReserver(col, onChange) {
       return results
     }
 
-    // everyone in the batch fits → all win, in click order
+    // everyone in the batch fits -> all win, in click order
     const session = client.startSession()
     try {
       await session.withTransaction(async () => {

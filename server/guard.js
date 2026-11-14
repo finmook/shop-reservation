@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 
 // ---------------------------------------------------------------------------
-// Rate limiter (fixed window, in memory) + "strikes" → temporary block
+// Rate limiter (fixed window, in memory) + "strikes" -> temporary block
 // ---------------------------------------------------------------------------
 const hits = new Map() // key -> { count, reset }
 const strikes = new Map() // key -> { count, reset }
@@ -13,8 +13,8 @@ export const LIMITS = {
   reserveIp: { max: 30, windowMs: 10_000 }, // per IP (shared wifi friendly)
   state: { max: 40, windowMs: 10_000 }, // per IP
 }
-const STRIKES_TO_BLOCK = 3 // hit a limit 3× within a minute…
-const BLOCK_MS = 2 * 60_000 // …→ blocked for 2 minutes
+const STRIKES_TO_BLOCK = 3 // hit a limit 3 times within a minute
+const BLOCK_MS = 2 * 60_000 // ...then blocked for 2 minutes
 
 /** Returns 0 if allowed, otherwise seconds until the caller may retry. */
 export function limit(kind, id) {
@@ -39,7 +39,7 @@ export function limit(kind, id) {
     strikes.set(id, s)
     if (s.count >= STRIKES_TO_BLOCK) {
       blocked.set(id, now + BLOCK_MS)
-      console.warn(`🚫 blocked ${id} for ${BLOCK_MS / 1000}s`)
+      console.warn(`blocked ${id} for ${BLOCK_MS / 1000}s`)
       return BLOCK_MS / 1000
     }
   }
@@ -58,7 +58,7 @@ setInterval(() => {
 // ---------------------------------------------------------------------------
 const SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex')
 if (!process.env.SESSION_SECRET) {
-  console.warn('⚠️  SESSION_SECRET not set — using a random one (everyone must log in again after a restart)')
+  console.warn('SESSION_SECRET not set, using a random one (everyone has to log in again after a restart)')
 }
 const TOKEN_TTL_MS = 12 * 60 * 60_000
 
@@ -85,7 +85,7 @@ export function readToken(token) {
 }
 
 // ---------------------------------------------------------------------------
-// Cloudflare Turnstile (optional — enabled when TURNSTILE_SECRET is set)
+// Cloudflare Turnstile (optional, enabled when TURNSTILE_SECRET is set)
 // ---------------------------------------------------------------------------
 export const captchaEnabled = Boolean(process.env.TURNSTILE_SECRET)
 

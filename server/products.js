@@ -1,4 +1,4 @@
-// ✏️ Edit this list, then run `npm run seed`.
+// Edit this list, then run `npm run seed`.
 // `total` = how many pieces you can get for this product.
 const NURSE = 'Chiikawa Clinic Take Care Mascot Key Ring'
 const DOCTOR = 'Chiikawa Clinic Leave It To Us Mascot Key Ring'

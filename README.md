@@ -1,63 +1,86 @@
-# 🧸 ร้านรับหิ้วตุ๊กตา — Product Reservation
+# Product Reservation
 
-"First click wins" reservation page. React (Vite) + Express + MongoDB Atlas.
+Reservation site for a small pre-order shop (ร้านรับหิ้วตุ๊กตา). Customers log in with their Twitter handle and click to reserve limited Chiikawa keyrings. Whoever clicks first gets it.
 
-## Setup
+The tricky part was handling clicks that come in at almost the same time, so most of the interesting code is in `server/reserve.js`.
 
-1. **Atlas**: create a free cluster → Database Access (add a user) → Network Access (allow your IP / server IP) → Connect → Drivers → copy the URI.
-2. `cp .env.example .env` and paste the URI.
-3. ```bash
-   npm install
-   npm run seed        # puts the 10 Nurse keyrings into Mongo
-   ```
-4. Dev (two terminals):
-   ```bash
-   npm run server      # API on :3001
-   npm run dev         # website on :5173 (proxies /api)
-   ```
-5. Production: `npm run build && npm start` → everything on one port.
-   Host on something that runs a long-lived Node process (Render, Railway, Fly, a VPS). **Not** Vercel/Netlify functions, and **one instance only** (the tie window lives in server memory).
+Built with React + Vite on the frontend, Express + MongoDB Atlas on the backend, and Server-Sent Events for live updates.
 
-## Products & stock
+## How it works
 
-Edit `server/products.js` (`total` = pieces available, default 1), then `npm run seed`.
-Images live in `public/products/`.
+Every click is timestamped on the server. The first click on a product starts a 500 ms window, and any other clicks on that product during the window go into the same batch. When the window closes:
 
-- `npm run seed` — add/update products, keep reservations
-- `npm run seed -- --reset` — wipe all reservations and refill stock
+- if there's no stock left, everyone gets "sold out"
+- if more people clicked than there is stock, nobody gets it and everyone has to click again
+- otherwise everyone in the batch gets one, ordered by click time
 
-## Data (MongoDB)
+Batches for the same product are processed one at a time, and stock is decremented with a conditional update (`stock >= n`) inside a transaction, so it can't oversell.
 
-`reservation` (one document per user):
+Setting `STRICT_TIE = true` makes any two clicks in the window a tie, even if there's enough stock.
+
+One item per person per product.
+
+## Data
+
+Three collections in the `shop` database:
+
 ```js
-{ username: "nif_tw", usernameLower: "nif_tw",
-  products: [ { productId: "chiikawa", name: "Nurse Chiikawa", order: 1, clickedAt: ISODate(...) } ] }
+// reservation: one doc per customer
+{ username: "alice", usernameLower: "alice",
+  products: [{ productId: "usagi", name: "Nurse Usagi", order: 1, clickedAt: ISODate("...") }] }
+
+// products
+{ _id: "usagi", name: "Nurse Usagi", price: 1980, total: 1, stock: 1, reservedCount: 0 }
+
+// clicks: log of wins and ties for the dashboard
+{ productId: "usagi", status: "tie", users: ["alice", "bob"], at: ISODate("...") }
 ```
-`order` = this person was the Nth to get that product.
-`products`: `{ _id, name, price, image, total, stock, reservedCount }`
-`clicks`: log of wins/ties for the dashboard.
 
-A product is only ever added to a user's list when they actually won it — sold-out or tied clicks are never saved there, and `stock` can't go below 0 (conditional `$inc` inside a transaction).
+`order` means this person was the nth to get that product. Products only get added to a customer's list if they actually won them.
 
-## "Same time" rule (`server/reserve.js`)
+## Bot protection
 
-- Clicks on the same product within **500 ms** (`TIE_WINDOW_MS`) are one batch.
-- Batch bigger than stock left → **tie**: nobody gets it, everyone sees "มีคนกดพร้อมกัน!" and must click again.
-- Enough stock for everyone → all win, ordered by click time.
-- `STRICT_TIE = true` → any 2+ people in the window tie, even if there's enough stock.
-- One piece per person per product.
+Since the free tiers have request limits, I added a few things in `server/guard.js`:
 
-## Anti-bot (`server/guard.js`)
+- Login returns an HMAC-signed token, and `/api/reserve` reads the username from the token instead of the request body.
+- Rate limits: 6 reserve requests per 10s per user, 30 per 10s per IP, 10 logins per 10 min per IP. Hitting a limit 3 times within a minute blocks you for 2 minutes.
+- Optional Cloudflare Turnstile on login.
+- A hidden honeypot field on the login form.
+- `/api/state` is cached, so lots of people watching the dashboard doesn't mean lots of DB reads.
 
-| Layer | What it does |
-|---|---|
-| Signed session token | Login returns an HMAC-signed token; `/api/reserve` takes the name **from the token**, not the body. Set `SESSION_SECRET`. |
-| Rate limits | reserve: 6 / 10s per user, 30 / 10s per IP · login: 10 / 10 min per IP · state: 40 / 10s per IP |
-| Strikes | Hitting a limit 3× in a minute → blocked for 2 minutes |
-| Turnstile (optional) | Cloudflare bot check on login. Set `VITE_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET` |
-| Honeypot | Hidden login field; bots that fill it are rejected |
-| State cache | `/api/state` is cached and shared, so 100 viewers ≈ 1 Mongo read per update |
-| SSE cap | Max 6 live connections per IP |
-| Client cooldown | Button locks for 1.5s after each click |
+## Why not Next.js
 
-Behind a proxy (Render/Railway/Cloudflare) set `TRUST_PROXY=1` so limits use the visitor's real IP.
+The 500 ms window keeps pending clicks in memory and SSE needs long-lived connections. On serverless (e.g. Vercel), requests can land on different instances and wouldn't see each other's clicks. So this runs as a single Node process that serves both the API and the built React app.
+
+## Running it
+
+```bash
+cp .env.example .env    # MongoDB URI + SESSION_SECRET
+npm install
+npm run seed            # add products
+npm run dev             # API on :3001, site on :5173
+```
+
+`npm run dev -- --host` exposes it on your local network so you can open it on your phone.
+
+To edit products, change `server/products.js` and run `npm run seed` again. `npm run seed -- --reset` clears all reservations and refills stock.
+
+## Testing simultaneous clicks
+
+It's hard to test this with one mouse, so `scripts/test-tie.js` sends requests as fake users:
+
+```bash
+npm run test:tie -- usagi 2 0     # 2 people at the same time -> tie
+npm run test:tie -- usagi 3 0     # 3 people -> tie
+npm run test:tie -- usagi 2 300   # 300 ms apart -> still a tie
+npm run test:tie -- usagi 2 700   # 700 ms apart -> first one wins
+npm run seed -- --reset           # clean up afterwards
+```
+
+## Deploying
+
+I use Render. Build command `npm install && npm run build`, start command `npm start`. Set `MONGODB_URI`, `DB_NAME`, `SESSION_SECRET` and `TRUST_PROXY=1` in the environment (plus the Turnstile keys if you use it). Only run one instance, since the click window is in memory.
+
+## Note
+
+Product images and names belong to their owners (Chiikawa © Nagano). This is a personal project, not affiliated with the official store.

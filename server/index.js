@@ -20,7 +20,7 @@ function tooMany(res, retryAfter) {
   return res.status(429).json({ status: 'ratelimited', retryAfter, error: 'too many requests' })
 }
 
-// ---------- cached state: many viewers → one Mongo read ----------
+// ---------- cached state: many viewers -> one Mongo read ----------
 let stateCache = null // Promise
 let stateAt = 0
 function getState() {
@@ -118,4 +118,4 @@ app.use(express.static(dist))
 app.get('*', (_req, res) => res.sendFile(path.join(dist, 'index.html')))
 
 const port = process.env.PORT || 3001
-app.listen(port, () => console.log(`🧸 server on http://localhost:${port}`))
+app.listen(port, () => console.log(`server on http://localhost:${port}`))

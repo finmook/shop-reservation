@@ -1,4 +1,4 @@
-// `npm run dev` → starts the API server (:3001) and the Vite website (:5173) together.
+// `npm run dev` -> starts the API server (:3001) and the Vite website (:5173) together.
 import { spawn } from 'node:child_process'
 
 const run = (name, color, cmd, args) => {
@@ -9,7 +9,7 @@ const run = (name, color, cmd, args) => {
   pipe(p.stdout, process.stdout)
   pipe(p.stderr, process.stderr)
   p.on('exit', (code) => {
-    console.log(`${tag}exited (${code}) — stopping everything`)
+    console.log(`${tag}exited (${code}), stopping everything`)
     shutdown(code ?? 0)
   })
   return p

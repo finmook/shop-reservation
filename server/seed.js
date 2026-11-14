@@ -1,5 +1,5 @@
-// npm run seed            → add/update products (keeps existing reservations)
-// npm run seed -- --reset → ALSO wipe all reservations and refill stock
+// npm run seed            -> add/update products (keeps existing reservations)
+// npm run seed -- --reset -> ALSO wipe all reservations and refill stock
 import { client, connect } from './db.js'
 import { PRODUCTS } from './products.js'
 
@@ -20,8 +20,8 @@ if (reset) {
   }
   await col.users.deleteMany({})
   await col.clicks.deleteMany({})
-  console.log('🧹 reservations cleared, stock refilled')
+  console.log('reservations cleared, stock refilled')
 }
 
-console.log(`✅ ${PRODUCTS.length} products seeded`)
+console.log(`${PRODUCTS.length} products seeded`)
 await client.close()
