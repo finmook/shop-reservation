@@ -1,0 +1,28 @@
+{
+  "name": "product-reservation",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "dev:web": "vite",
+    "server": "node --env-file-if-exists=.env --watch server/index.js",
+    "build": "vite build",
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "seed": "node --env-file-if-exists=.env server/seed.js",
+    "test:tie": "node --env-file-if-exists=.env scripts/test-tie.js"
+  },
+  "dependencies": {
+    "express": "^4.21.1",
+    "mongodb": "^6.10.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.8"
+  },
+  "engines": {
+    "node": ">=22.9"
+  }
+}
